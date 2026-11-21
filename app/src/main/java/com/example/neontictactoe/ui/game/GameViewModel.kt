@@ -149,6 +149,7 @@ class GameViewModel(
         recentUnlocks = emptyList(),
       )
     }
+    soundFeedback.playGameStart()
   }
 
   /**
@@ -190,6 +191,8 @@ class GameViewModel(
       )
     }
 
+    soundFeedback.playPlayAgain()
+
     if (shouldTriggerAi) {
       triggerAiMove(expectedGeneration = targetGeneration)
     }
@@ -222,6 +225,7 @@ class GameViewModel(
         recentUnlocks = emptyList(),
       )
     }
+    soundFeedback.playGameStart()
     if (shouldTriggerAi) {
       triggerAiMove(expectedGeneration = nextGeneration)
     }
@@ -266,10 +270,14 @@ class GameViewModel(
       return
     }
 
-    if (mover == PlayerSlot.PLAYER_1) {
-      soundFeedback.playMovePlayer1()
-    } else {
-      soundFeedback.playMovePlayer2()
+    val moverAnimal =
+      if (mover == PlayerSlot.PLAYER_1) currentState.player1Animal else currentState.player2Animal
+    when {
+      fromAi -> soundFeedback.playAiMove()
+      moverAnimal == AnimalType.WOLF -> soundFeedback.playWolfMove()
+      moverAnimal == AnimalType.LION -> soundFeedback.playLionMove()
+      mover == PlayerSlot.PLAYER_1 -> soundFeedback.playLionMove()
+      else -> soundFeedback.playWolfMove()
     }
     soundFeedback.vibrateMove()
 
@@ -281,13 +289,27 @@ class GameViewModel(
       is GameResult.Win -> {
         if (res.winner == PlayerSlot.PLAYER_1) {
           nextP1Score += 1
-          soundFeedback.playWin()
+          val winsSeries =
+            currentState.config.matchFormat != MatchFormat.SINGLE_ROUND &&
+              nextP1Score >= currentState.config.matchFormat.roundsToWin
+          if (winsSeries) {
+            soundFeedback.playVictoryCelebration()
+          } else {
+            soundFeedback.playWin()
+          }
         } else {
           nextP2Score += 1
           if (currentState.config.isAiOpponent) {
             soundFeedback.playGameOver()
           } else {
-            soundFeedback.playWin()
+            val winsSeries =
+              currentState.config.matchFormat != MatchFormat.SINGLE_ROUND &&
+                nextP2Score >= currentState.config.matchFormat.roundsToWin
+            if (winsSeries) {
+              soundFeedback.playVictoryCelebration()
+            } else {
+              soundFeedback.playWin()
+            }
           }
         }
         soundFeedback.vibrateWin()

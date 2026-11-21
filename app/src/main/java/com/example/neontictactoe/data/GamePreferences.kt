@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.neontictactoe.domain.AIDifficulty
@@ -23,6 +24,11 @@ private val Context.gamePrefsDataStore: DataStore<Preferences> by
 
 data class UserPreferences(
   val soundEnabled: Boolean = true,
+  val musicEnabled: Boolean = true,
+  val sfxEnabled: Boolean = true,
+  val masterVolume: Float = 1.0f,
+  val musicVolume: Float = 0.55f,
+  val sfxVolume: Float = 1.0f,
   val vibrationEnabled: Boolean = true,
   val themeStyle: NeonThemeStyle = NeonThemeStyle.MIDNIGHT_JUNGLE,
   val player1Name: String = "Player 1",
@@ -38,6 +44,16 @@ interface PreferencesRepository {
   val preferencesFlow: Flow<UserPreferences>
 
   suspend fun setSoundEnabled(enabled: Boolean)
+
+  suspend fun setMusicEnabled(enabled: Boolean)
+
+  suspend fun setSfxEnabled(enabled: Boolean)
+
+  suspend fun setMasterVolume(volume: Float)
+
+  suspend fun setMusicVolume(volume: Float)
+
+  suspend fun setSfxVolume(volume: Float)
 
   suspend fun setVibrationEnabled(enabled: Boolean)
 
@@ -66,6 +82,11 @@ class GamePreferencesRepository(
 
   private object Keys {
     val SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
+    val MUSIC_ENABLED = booleanPreferencesKey("music_enabled")
+    val SFX_ENABLED = booleanPreferencesKey("sfx_enabled")
+    val MASTER_VOLUME = floatPreferencesKey("master_volume")
+    val MUSIC_VOLUME = floatPreferencesKey("music_volume")
+    val SFX_VOLUME = floatPreferencesKey("sfx_volume")
     val VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
     val THEME_STYLE = stringPreferencesKey("theme_style")
     val PLAYER_1_NAME = stringPreferencesKey("player_1_name")
@@ -89,6 +110,11 @@ class GamePreferencesRepository(
       .map { prefs ->
         UserPreferences(
           soundEnabled = prefs[Keys.SOUND_ENABLED] ?: true,
+          musicEnabled = prefs[Keys.MUSIC_ENABLED] ?: true,
+          sfxEnabled = prefs[Keys.SFX_ENABLED] ?: true,
+          masterVolume = (prefs[Keys.MASTER_VOLUME] ?: 1.0f).coerceIn(0f, 1f),
+          musicVolume = (prefs[Keys.MUSIC_VOLUME] ?: 0.55f).coerceIn(0f, 1f),
+          sfxVolume = (prefs[Keys.SFX_VOLUME] ?: 1.0f).coerceIn(0f, 1f),
           vibrationEnabled = prefs[Keys.VIBRATION_ENABLED] ?: true,
           themeStyle =
             prefs[Keys.THEME_STYLE]?.let { raw ->
@@ -121,6 +147,26 @@ class GamePreferencesRepository(
 
   override suspend fun setSoundEnabled(enabled: Boolean) {
     dataStore.edit { it[Keys.SOUND_ENABLED] = enabled }
+  }
+
+  override suspend fun setMusicEnabled(enabled: Boolean) {
+    dataStore.edit { it[Keys.MUSIC_ENABLED] = enabled }
+  }
+
+  override suspend fun setSfxEnabled(enabled: Boolean) {
+    dataStore.edit { it[Keys.SFX_ENABLED] = enabled }
+  }
+
+  override suspend fun setMasterVolume(volume: Float) {
+    dataStore.edit { it[Keys.MASTER_VOLUME] = volume.coerceIn(0f, 1f) }
+  }
+
+  override suspend fun setMusicVolume(volume: Float) {
+    dataStore.edit { it[Keys.MUSIC_VOLUME] = volume.coerceIn(0f, 1f) }
+  }
+
+  override suspend fun setSfxVolume(volume: Float) {
+    dataStore.edit { it[Keys.SFX_VOLUME] = volume.coerceIn(0f, 1f) }
   }
 
   override suspend fun setVibrationEnabled(enabled: Boolean) {

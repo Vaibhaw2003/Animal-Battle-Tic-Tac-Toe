@@ -3,6 +3,7 @@ package com.example.neontictactoe.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.neontictactoe.audio.AudioSettings
 import com.example.neontictactoe.audio.SoundFeedbackController
 import com.example.neontictactoe.data.GameStatistics
 import com.example.neontictactoe.data.PreferencesRepository
@@ -56,6 +57,11 @@ class AppViewModel(
   val matchSetup: StateFlow<MatchSetupConfig> = _matchSetup.asStateFlow()
 
   private var soundOverridden = false
+  private var musicOverridden = false
+  private var sfxOverridden = false
+  private var masterVolumeOverridden = false
+  private var musicVolumeOverridden = false
+  private var sfxVolumeOverridden = false
   private var vibrationOverridden = false
   private var themeOverridden = false
   private var p1Overridden = false
@@ -72,6 +78,11 @@ class AppViewModel(
       _preferences.update { current ->
         UserPreferences(
           soundEnabled = if (soundOverridden) current.soundEnabled else loaded.soundEnabled,
+          musicEnabled = if (musicOverridden) current.musicEnabled else loaded.musicEnabled,
+          sfxEnabled = if (sfxOverridden) current.sfxEnabled else loaded.sfxEnabled,
+          masterVolume = if (masterVolumeOverridden) current.masterVolume else loaded.masterVolume,
+          musicVolume = if (musicVolumeOverridden) current.musicVolume else loaded.musicVolume,
+          sfxVolume = if (sfxVolumeOverridden) current.sfxVolume else loaded.sfxVolume,
           vibrationEnabled =
             if (vibrationOverridden) current.vibrationEnabled else loaded.vibrationEnabled,
           themeStyle = if (themeOverridden) current.themeStyle else loaded.themeStyle,
@@ -90,8 +101,11 @@ class AppViewModel(
         )
       }
       val resolved = _preferences.value
-      soundFeedback.setSoundEnabled(resolved.soundEnabled)
+      syncSoundSettings(resolved)
       soundFeedback.setVibrationEnabled(resolved.vibrationEnabled)
+      if (resolved.soundEnabled && resolved.musicEnabled) {
+        soundFeedback.startBackgroundMusic()
+      }
       _matchSetup.update { current ->
         current.copy(
           boardSize = if (boardSizeOverridden) current.boardSize else resolved.defaultBoardSize,
@@ -269,6 +283,27 @@ class AppViewModel(
     }
   }
 
+  private fun syncSoundSettings(prefs: UserPreferences) {
+    soundFeedback.updateAudioSettings(
+      AudioSettings(
+        soundEnabled = prefs.soundEnabled,
+        musicEnabled = prefs.musicEnabled,
+        sfxEnabled = prefs.sfxEnabled,
+        masterVolume = prefs.masterVolume,
+        musicVolume = prefs.musicVolume,
+        sfxVolume = prefs.sfxVolume,
+      )
+    )
+  }
+
+  fun onAppForeground() {
+    soundFeedback.onAppForeground()
+  }
+
+  fun onAppBackground() {
+    soundFeedback.onAppBackground()
+  }
+
   fun toggleSound() {
     setSoundEnabled(!_preferences.value.soundEnabled)
   }
@@ -277,8 +312,51 @@ class AppViewModel(
     soundOverridden = true
     _preferences.update { it.copy(soundEnabled = enabled) }
     soundFeedback.setSoundEnabled(enabled)
-    if (enabled) soundFeedback.playButtonClick()
+    if (enabled && _preferences.value.sfxEnabled) {
+      soundFeedback.playButtonClick()
+    }
     viewModelScope.launch { preferencesRepository.setSoundEnabled(enabled) }
+  }
+
+  fun setMusicEnabled(enabled: Boolean) {
+    musicOverridden = true
+    _preferences.update { it.copy(musicEnabled = enabled) }
+    soundFeedback.setMusicEnabled(enabled)
+    viewModelScope.launch { preferencesRepository.setMusicEnabled(enabled) }
+  }
+
+  fun setSfxEnabled(enabled: Boolean) {
+    sfxOverridden = true
+    _preferences.update { it.copy(sfxEnabled = enabled) }
+    soundFeedback.setSfxEnabled(enabled)
+    if (enabled && _preferences.value.soundEnabled) {
+      soundFeedback.playButtonClick()
+    }
+    viewModelScope.launch { preferencesRepository.setSfxEnabled(enabled) }
+  }
+
+  fun setMasterVolume(volume: Float) {
+    val clamped = volume.coerceIn(0f, 1f)
+    masterVolumeOverridden = true
+    _preferences.update { it.copy(masterVolume = clamped) }
+    soundFeedback.setMasterVolume(clamped)
+    viewModelScope.launch { preferencesRepository.setMasterVolume(clamped) }
+  }
+
+  fun setMusicVolume(volume: Float) {
+    val clamped = volume.coerceIn(0f, 1f)
+    musicVolumeOverridden = true
+    _preferences.update { it.copy(musicVolume = clamped) }
+    soundFeedback.setMusicVolume(clamped)
+    viewModelScope.launch { preferencesRepository.setMusicVolume(clamped) }
+  }
+
+  fun setSfxVolume(volume: Float) {
+    val clamped = volume.coerceIn(0f, 1f)
+    sfxVolumeOverridden = true
+    _preferences.update { it.copy(sfxVolume = clamped) }
+    soundFeedback.setSfxVolume(clamped)
+    viewModelScope.launch { preferencesRepository.setSfxVolume(clamped) }
   }
 
   fun setVibrationEnabled(enabled: Boolean) {

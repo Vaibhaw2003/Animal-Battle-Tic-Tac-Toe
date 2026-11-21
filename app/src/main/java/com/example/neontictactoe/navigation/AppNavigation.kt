@@ -105,7 +105,6 @@ fun NeonTicTacToeApp(
           player2Animal = matchSetup.player2Animal,
           onToggleSound = { appViewModel.toggleSound() },
           onPlayGameClick = {
-            appViewModel.soundFeedback.playButtonClick()
             appViewModel.setQuickPlayConfig()
             gameViewModel.startNewMatch(appViewModel.matchSetup.value)
             safeNavigate(AppRoutes.ROUTE_GAME)
@@ -174,8 +173,13 @@ fun NeonTicTacToeApp(
           unlockedAnimals = statistics.unlockedAnimals,
           initialSlot = initialAnimalSlot,
           onSelectAnimal = { slot, animal ->
-            appViewModel.soundFeedback.playButtonClick()
-            appViewModel.selectPlayerAnimal(slot, animal)
+            val selected = appViewModel.selectPlayerAnimal(slot, animal)
+            if (selected) {
+              appViewModel.soundFeedback.playAnimalSelect()
+            } else {
+              appViewModel.soundFeedback.playButtonClick()
+            }
+            selected
           },
           onContinueToSetup = {
             appViewModel.soundFeedback.playButtonClick()
@@ -215,7 +219,6 @@ fun NeonTicTacToeApp(
             appViewModel.updateSetupMatchFormat(format)
           },
           onStartMatchClick = {
-            appViewModel.soundFeedback.playButtonClick()
             appViewModel.persistSetupNamesAndDefaults()
             gameViewModel.startNewMatch(matchSetup)
             safeNavigate(AppRoutes.ROUTE_GAME)
@@ -234,11 +237,9 @@ fun NeonTicTacToeApp(
           onToggleSound = { appViewModel.toggleSound() },
           onCellClick = { index -> gameViewModel.onCellClicked(index) },
           onRestartClick = {
-            appViewModel.soundFeedback.playButtonClick()
             gameViewModel.resetGame()
           },
           onNextRoundClick = {
-            appViewModel.soundFeedback.playButtonClick()
             gameViewModel.startNextRound()
           },
           onSettingsClick = {
@@ -289,6 +290,14 @@ fun NeonTicTacToeApp(
         SettingsScreen(
           preferences = preferences,
           onSoundToggle = { appViewModel.setSoundEnabled(it) },
+          onMusicToggle = {
+            appViewModel.soundFeedback.playButtonClick()
+            appViewModel.setMusicEnabled(it)
+          },
+          onSfxToggle = { appViewModel.setSfxEnabled(it) },
+          onMasterVolumeChange = { appViewModel.setMasterVolume(it) },
+          onMusicVolumeChange = { appViewModel.setMusicVolume(it) },
+          onSfxVolumeChange = { appViewModel.setSfxVolume(it) },
           onVibrationToggle = {
             appViewModel.soundFeedback.playButtonClick()
             appViewModel.setVibrationEnabled(it)

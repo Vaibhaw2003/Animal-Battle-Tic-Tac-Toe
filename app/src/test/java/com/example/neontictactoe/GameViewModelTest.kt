@@ -141,23 +141,66 @@ private class InMemoryStatisticsDataSource : StatisticsDataSource {
 private class RecordingSoundFeedback : SoundFeedbackController {
   var moveP1Count: Int = 0
   var moveP2Count: Int = 0
+  var aiMoveCount: Int = 0
+  var gameStartCount: Int = 0
+  var playAgainCount: Int = 0
   var winCount: Int = 0
+  var victoryCelebrationCount: Int = 0
   var drawCount: Int = 0
   var gameOverCount: Int = 0
   var vibrateWinCount: Int = 0
 
+  override fun updateAudioSettings(settings: com.example.neontictactoe.audio.AudioSettings) {}
+
   override fun setSoundEnabled(enabled: Boolean) {}
+
+  override fun setMusicEnabled(enabled: Boolean) {}
+
+  override fun setSfxEnabled(enabled: Boolean) {}
+
+  override fun setMasterVolume(volume: Float) {}
+
+  override fun setMusicVolume(volume: Float) {}
+
+  override fun setSfxVolume(volume: Float) {}
 
   override fun setVibrationEnabled(enabled: Boolean) {}
 
+  override fun onAppForeground() {}
+
+  override fun onAppBackground() {}
+
+  override fun startBackgroundMusic() {}
+
+  override fun stopBackgroundMusic() {}
+
   override fun playButtonClick() {}
 
-  override fun playMovePlayer1() {
+  override fun playGameStart() {
+    gameStartCount++
+  }
+
+  override fun playAnimalSelect() {}
+
+  override fun playLionMove() {
     moveP1Count++
   }
 
-  override fun playMovePlayer2() {
+  override fun playWolfMove() {
     moveP2Count++
+  }
+
+  override fun playAiMove() {
+    aiMoveCount++
+    moveP2Count++
+  }
+
+  override fun playMovePlayer1() {
+    playLionMove()
+  }
+
+  override fun playMovePlayer2() {
+    playWolfMove()
   }
 
   override fun playWin() {
@@ -170,6 +213,14 @@ private class RecordingSoundFeedback : SoundFeedbackController {
 
   override fun playGameOver() {
     gameOverCount++
+  }
+
+  override fun playPlayAgain() {
+    playAgainCount++
+  }
+
+  override fun playVictoryCelebration() {
+    victoryCelebrationCount++
   }
 
   override fun vibrateMove() {}
@@ -212,6 +263,7 @@ class GameViewModelTest {
 
         assertEquals(1, vm.uiState.value.player1Score)
         assertEquals(0, vm.uiState.value.player2Score)
+        assertEquals(1, fakeSound.gameStartCount)
         assertEquals(1, fakeSound.winCount)
         assertEquals(1, fakeSound.vibrateWinCount)
         assertEquals(3, fakeSound.moveP1Count)
@@ -226,7 +278,9 @@ class GameViewModelTest {
         // Advance to round 2 and restart
         vm.startNextRound()
         assertEquals(2, vm.uiState.value.currentRound)
+        assertEquals(2, fakeSound.gameStartCount)
         vm.restartMatch()
+        assertEquals(1, fakeSound.playAgainCount)
         assertEquals(0, vm.uiState.value.board.moveCount)
         assertEquals(1, statsRepo.statisticsFlow.first().totalGamesPlayed)
       } finally {
@@ -276,7 +330,8 @@ class GameViewModelTest {
       Dispatchers.setMain(testDispatcher)
       try {
         val statsRepo = InMemoryStatisticsDataSource()
-        val vm = GameViewModel(statsRepo, RecordingSoundFeedback(), testDispatcher, aiThinkDelayMs = 0L)
+        val fakeSound = RecordingSoundFeedback()
+        val vm = GameViewModel(statsRepo, fakeSound, testDispatcher, aiThinkDelayMs = 0L)
         vm.startNewMatch(
           MatchSetupConfig(
             playMode = PlayMode.LION_VS_AI,
@@ -290,6 +345,7 @@ class GameViewModelTest {
             isAiOpponent = true,
           )
         )
+        assertEquals(1, fakeSound.gameStartCount)
 
         // Force deterministic 3x3 Draw vs Expert AI
         while (!vm.uiState.value.isGameOver) {
@@ -309,9 +365,12 @@ class GameViewModelTest {
         assertTrue(drawnState.isGameOver)
         assertNull(drawnState.winner)
         assertEquals(1, drawnState.drawCount)
+        assertEquals(1, fakeSound.drawCount)
+        assertEquals(4, fakeSound.aiMoveCount)
 
-        // Post-draw clicks must be rejected and must not increment draw stats
+        // Post-draw clicks must be rejected and must not increment draw stats or replay draw sound
         vm.onCellClicked(0)
+        assertEquals(1, fakeSound.drawCount)
         assertEquals(1, vm.uiState.value.drawCount)
         val statsAfterDraw = statsRepo.statisticsFlow.first()
         assertEquals(1, statsAfterDraw.totalDraws)
@@ -319,6 +378,7 @@ class GameViewModelTest {
 
         // PLAY AGAIN
         vm.resetGame()
+        assertEquals(1, fakeSound.playAgainCount)
 
         val rematchState = vm.uiState.value
         assertFalse(rematchState.isGameOver)

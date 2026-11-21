@@ -38,34 +38,101 @@ import org.robolectric.annotation.Config
 
 private class FakeSoundFeedback : SoundFeedbackController {
   var lastSoundEnabled: Boolean = true
+  var lastMusicEnabled: Boolean = true
+  var lastSfxEnabled: Boolean = true
+  var lastMasterVolume: Float = 1.0f
+  var lastMusicVolume: Float = 0.55f
+  var lastSfxVolume: Float = 1.0f
   var lastVibrationEnabled: Boolean = true
   var clickCount: Int = 0
+  var gameStartCount: Int = 0
+  var animalSelectCount: Int = 0
   var moveP1Count: Int = 0
   var moveP2Count: Int = 0
+  var aiMoveCount: Int = 0
   var winCount: Int = 0
+  var victoryCelebrationCount: Int = 0
   var drawCount: Int = 0
   var gameOverCount: Int = 0
+  var playAgainCount: Int = 0
   var vibrateMoveCount: Int = 0
   var vibrateWinCount: Int = 0
 
+  override fun updateAudioSettings(settings: com.example.neontictactoe.audio.AudioSettings) {
+    lastSoundEnabled = settings.soundEnabled
+    lastMusicEnabled = settings.musicEnabled
+    lastSfxEnabled = settings.sfxEnabled
+    lastMasterVolume = settings.masterVolume
+    lastMusicVolume = settings.musicVolume
+    lastSfxVolume = settings.sfxVolume
+  }
+
   override fun setSoundEnabled(enabled: Boolean) {
     lastSoundEnabled = enabled
+  }
+
+  override fun setMusicEnabled(enabled: Boolean) {
+    lastMusicEnabled = enabled
+  }
+
+  override fun setSfxEnabled(enabled: Boolean) {
+    lastSfxEnabled = enabled
+  }
+
+  override fun setMasterVolume(volume: Float) {
+    lastMasterVolume = volume
+  }
+
+  override fun setMusicVolume(volume: Float) {
+    lastMusicVolume = volume
+  }
+
+  override fun setSfxVolume(volume: Float) {
+    lastSfxVolume = volume
   }
 
   override fun setVibrationEnabled(enabled: Boolean) {
     lastVibrationEnabled = enabled
   }
 
+  override fun onAppForeground() {}
+
+  override fun onAppBackground() {}
+
+  override fun startBackgroundMusic() {}
+
+  override fun stopBackgroundMusic() {}
+
   override fun playButtonClick() {
     clickCount++
   }
 
-  override fun playMovePlayer1() {
+  override fun playGameStart() {
+    gameStartCount++
+  }
+
+  override fun playAnimalSelect() {
+    animalSelectCount++
+  }
+
+  override fun playLionMove() {
     moveP1Count++
   }
 
-  override fun playMovePlayer2() {
+  override fun playWolfMove() {
     moveP2Count++
+  }
+
+  override fun playAiMove() {
+    aiMoveCount++
+  }
+
+  override fun playMovePlayer1() {
+    playLionMove()
+  }
+
+  override fun playMovePlayer2() {
+    playWolfMove()
   }
 
   override fun playWin() {
@@ -78,6 +145,14 @@ private class FakeSoundFeedback : SoundFeedbackController {
 
   override fun playGameOver() {
     gameOverCount++
+  }
+
+  override fun playPlayAgain() {
+    playAgainCount++
+  }
+
+  override fun playVictoryCelebration() {
+    victoryCelebrationCount++
   }
 
   override fun vibrateMove() {
@@ -447,6 +522,10 @@ class NeonTicTacToeRobolectricTest {
 
     composeTestRule.onNodeWithTag("settings_sound_switch").performScrollTo().performClick()
     assertFalse(fakeSound.lastSoundEnabled)
+    composeTestRule.onNodeWithTag("settings_music_switch").performScrollTo().performClick()
+    assertFalse(fakeSound.lastMusicEnabled)
+    composeTestRule.onNodeWithTag("settings_sfx_switch").performScrollTo().performClick()
+    assertFalse(fakeSound.lastSfxEnabled)
     composeTestRule.onNodeWithTag("settings_vibration_switch").performScrollTo().performClick()
     assertFalse(fakeSound.lastVibrationEnabled)
 
@@ -476,6 +555,8 @@ class NeonTicTacToeRobolectricTest {
         withTimeout(3000) {
           prefsRepo.preferencesFlow.first {
             !it.soundEnabled &&
+              !it.musicEnabled &&
+              !it.sfxEnabled &&
               !it.vibrationEnabled &&
               it.themeStyle == NeonThemeStyle.EMERALD_CANOPY &&
               it.player1Name == "Apex" &&
@@ -485,6 +566,8 @@ class NeonTicTacToeRobolectricTest {
           }
         }
       assertFalse(prefs.soundEnabled)
+      assertFalse(prefs.musicEnabled)
+      assertFalse(prefs.sfxEnabled)
       assertFalse(prefs.vibrationEnabled)
       assertEquals(NeonThemeStyle.EMERALD_CANOPY, prefs.themeStyle)
       assertEquals("Apex", prefs.player1Name)

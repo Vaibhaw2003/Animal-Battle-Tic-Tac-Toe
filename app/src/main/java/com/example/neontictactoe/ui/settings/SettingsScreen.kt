@@ -26,6 +26,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -60,6 +62,11 @@ import com.example.neontictactoe.ui.theme.paletteForTheme
 fun SettingsScreen(
   preferences: UserPreferences,
   onSoundToggle: (Boolean) -> Unit,
+  onMusicToggle: (Boolean) -> Unit = {},
+  onSfxToggle: (Boolean) -> Unit = {},
+  onMasterVolumeChange: (Float) -> Unit = {},
+  onMusicVolumeChange: (Float) -> Unit = {},
+  onSfxVolumeChange: (Float) -> Unit = {},
   onVibrationToggle: (Boolean) -> Unit,
   onThemeSelected: (NeonThemeStyle) -> Unit,
   onPlayer1NameChange: (String) -> Unit,
@@ -115,11 +122,51 @@ fun SettingsScreen(
             )
             Spacer(modifier = Modifier.height(10.dp))
             SettingsSwitchRow(
-              title = "Sound Effects",
-              subtitle = "Synth tones for animal moves, wins & buttons",
+              title = "Master Sound",
+              subtitle = "Enable or mute all game music and sound effects",
               checked = preferences.soundEnabled,
               onCheckedChange = onSoundToggle,
               testTag = "settings_sound_switch",
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            SettingsSwitchRow(
+              title = "Background Music",
+              subtitle = "Looping Midnight Jungle arena soundtrack",
+              checked = preferences.musicEnabled,
+              onCheckedChange = onMusicToggle,
+              testTag = "settings_music_switch",
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            SettingsSwitchRow(
+              title = "Sound Effects",
+              subtitle = "Animal moves, clicks, wins & draw audio",
+              checked = preferences.sfxEnabled,
+              onCheckedChange = onSfxToggle,
+              testTag = "settings_sfx_switch",
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            SettingsVolumeSliderRow(
+              title = "Master Volume",
+              value = preferences.masterVolume,
+              onValueChange = onMasterVolumeChange,
+              enabled = preferences.soundEnabled,
+              testTag = "settings_master_volume_slider",
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            SettingsVolumeSliderRow(
+              title = "Music Volume",
+              value = preferences.musicVolume,
+              onValueChange = onMusicVolumeChange,
+              enabled = preferences.soundEnabled && preferences.musicEnabled,
+              testTag = "settings_music_volume_slider",
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            SettingsVolumeSliderRow(
+              title = "Effects Volume",
+              value = preferences.sfxVolume,
+              onValueChange = onSfxVolumeChange,
+              enabled = preferences.soundEnabled && preferences.sfxEnabled,
+              testTag = "settings_sfx_volume_slider",
             )
             Spacer(modifier = Modifier.height(8.dp))
             SettingsSwitchRow(
@@ -514,6 +561,51 @@ private fun SettingsSwitchRow(
           uncheckedBorderColor = neon.gridLine,
         ),
       modifier = Modifier.testTag(testTag),
+    )
+  }
+}
+
+@Composable
+private fun SettingsVolumeSliderRow(
+  title: String,
+  value: Float,
+  onValueChange: (Float) -> Unit,
+  enabled: Boolean,
+  testTag: String,
+) {
+  val neon = LocalNeonColors.current
+  val percent = (value.coerceIn(0f, 1f) * 100f).toInt()
+  Column(modifier = Modifier.fillMaxWidth()) {
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Text(
+        text = title,
+        style = MaterialTheme.typography.titleSmall,
+        color = if (enabled) neon.textPrimary else neon.textSecondary,
+      )
+      Text(
+        text = "$percent%",
+        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+        color = if (enabled && percent > 0) neon.primaryCyan else neon.textSecondary,
+      )
+    }
+    Slider(
+      value = value.coerceIn(0f, 1f),
+      onValueChange = onValueChange,
+      valueRange = 0f..1f,
+      enabled = enabled,
+      colors =
+        SliderDefaults.colors(
+          thumbColor = neon.primaryCyan,
+          activeTrackColor = neon.primaryCyan,
+          inactiveTrackColor = neon.gridLine.copy(alpha = 0.5f),
+          disabledThumbColor = neon.textSecondary,
+          disabledActiveTrackColor = neon.textSecondary.copy(alpha = 0.5f),
+        ),
+      modifier = Modifier.fillMaxWidth().testTag(testTag),
     )
   }
 }
