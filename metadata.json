@@ -1,0 +1,6 @@
+{
+  "name": "Animal Battle Tic Tac Toe",
+  "description": "A midnight-jungle neon Animal Battle Tic Tac Toe game featuring 8 unlockable vector animal fighters (Lion, Wolf, Tiger, Eagle, Fox, Panda, Bear, Dragon), multiple board sizes (3x3 to 9x9), smart minimax & heuristic AI difficulties, local multiplayer series, achievements, and persistent statistics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

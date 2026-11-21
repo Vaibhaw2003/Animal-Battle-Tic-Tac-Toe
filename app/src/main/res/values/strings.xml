@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Animal Battle Tic Tac Toe</string>
+    <string name="cd_back">Navigate back</string>
+    <string name="cd_settings">Open settings</string>
+    <string name="cd_sound_toggle">Toggle sound effects</string>
+    <string name="cd_app_logo">Animal Battle Tic Tac Toe Logo</string>
+    <string name="play_game">PLAY GAME</string>
+    <string name="play_vs_ai">PLAY VS AI</string>
+    <string name="two_player">TWO PLAYER</string>
+    <string name="game_modes">GAME MODES</string>
+    <string name="animal_selection">ANIMAL SELECTION</string>
+    <string name="statistics">STATISTICS</string>
+    <string name="achievements">ACHIEVEMENTS</string>
+    <string name="settings">SETTINGS</string>
+    <string name="privacy_policy_title">Privacy Policy</string>
+    <string name="privacy_policy_body">Animal Battle Tic Tac Toe operates 100% offline on your device. No personal information, gameplay telemetry, or analytics are collected, transmitted, or shared with third parties. Player names, chosen animal fighters, unlocked achievements, preferences, and match statistics are stored locally in private app storage and can be cleared anytime from Settings.</string>
+    <string name="about_title">About Animal Battle Tic Tac Toe</string>
+    <string name="about_body">Animal Battle Tic Tac Toe is a midnight-jungle neon strategy arena built with Kotlin and Jetpack Compose. Battle with 8 unlockable animal champions—starting with Cyan Lion and Golden Wolf—across 3×3 to 9×9 tactical grids, smart alpha-beta AI difficulties, local multiplayer series, and achievement unlocks.</string>
+</resources>

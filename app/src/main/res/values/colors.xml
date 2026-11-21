@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="neon_navy_bg">#FF020B18</color>
+    <color name="neon_navy_secondary">#FF05162B</color>
+    <color name="purple_200">#FF00E5FF</color>
+    <color name="purple_500">#FF00DFA5</color>
+    <color name="purple_700">#FF087C91</color>
+    <color name="teal_200">#FF00BFFF</color>
+    <color name="teal_700">#FFFFB000</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
